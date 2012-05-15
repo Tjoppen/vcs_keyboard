@@ -2,9 +2,9 @@
 #include <SDL/SDL_audio.h>
 
 #define FREQ 31400
+#define C 32
 
-static uint32_t keymask = 0;
-static int counters[2] = {0};
+static int counters[C] = {0};
 
 static const struct {
     SDLKey key;
@@ -26,17 +26,17 @@ static const int typetab[] = {
 };
 
 //code mostly ripped from Stella
-static uint8_t myAUDC[2] = {0};
-static uint8_t myAUDF[2] = {0};
-static uint8_t myAUDV[2] = {0};
-static uint8_t myP4[2];           // 4-bit register LFSR (lower 4 bits used)
-static uint8_t myP5[2];           // 5-bit register LFSR (lower 5 bits used)
+static uint8_t myAUDC[C] = {0};
+static uint8_t myAUDF[C] = {0};
+static int myAUDV[C] = {0};
+static uint8_t myP4[C];           // 4-bit register LFSR (lower 4 bits used)
+static uint8_t myP5[C];           // 5-bit register LFSR (lower 5 bits used)
 
-static uint8_t next_tia_sample() {
-    int c;
+static int next_tia_sample() {
+    int c, ret = 0;
 
     // Process both sound channels
-    for (c = 0; c < 2; c++)
+    for (c = 0; c < C; c++)
     {
       // Update P4 & P5 registers for channel if freq divider outputs a pulse
       if (++counters[c] >= myAUDF[c]*2+2)
@@ -240,10 +240,11 @@ static uint8_t next_tia_sample() {
           }
         }
       }
+
+      ret += (myP4[c] & 8) ? myAUDV[c] : 0;
     }
 
-    return ((myP4[0] & 8) ? myAUDV[0] : 0) +
-           ((myP4[1] & 8) ? myAUDV[1] : 0);
+    return ret;
 }
 
 static void synth(void *unused, Uint8 *stream, int len) {
@@ -251,15 +252,34 @@ static void synth(void *unused, Uint8 *stream, int len) {
     int x, f;
 
     for (x = 0; x < len/2; x++)
-        s16[x] = next_tia_sample() * 10000;
+        s16[x] = next_tia_sample();
+}
+
+static void setAUDC(int c) {
+    int x;
+    for (x = 0; x < C; x++)
+        myAUDC[x] = c;
+}
+
+static void setAUDV(int v) {
+    int x;
+    for (x = 0; x < C; x++)
+        myAUDV[x] = v;
 }
 
 int main() {
+    int x;
+
     SDL_AudioSpec fmt;
     SDL_Event event;
 
     /* need a window for the keyboard to work */
     SDL_SetVideoMode(320, 240, 0, 0);
+
+    setAUDC(4);
+
+    for (x = 0; x < C; x++)
+        myAUDF[x] = x;
 
     fmt.freq = FREQ;
     fmt.format = AUDIO_S16;
@@ -284,9 +304,9 @@ int main() {
                 for (x = 0; x < sizeof(keymap)/sizeof(keymap[0]); x++)
                     if (event.key.keysym.sym == keymap[x].key) {
                         if (event.type == SDL_KEYDOWN)
-                            keymask |= 1 << (keymap[x].freq_inv ^ 31);
+                            myAUDV[keymap[x].freq_inv ^ 31] = 1000;
                         else
-                            keymask &= ~(1 << (keymap[x].freq_inv ^ 31));
+                            myAUDV[keymap[x].freq_inv ^ 31] = 0;
                     }
             } else if (event.type == SDL_QUIT)
                 goto die;
