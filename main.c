@@ -316,6 +316,16 @@ static void update_wav_header() {
     write_l32(wav, num_samples*2);
 }
 
+static void print_help() {
+    printf(
+        "Keys 8-Z in a normal QWERTY matrix = AUDF 0..31\n"
+        "Keypad 0-9 changes sound type\n"
+        "Press 'enter' to label the end of interesting passages\n"
+        "Press 'space' to delimit passages\n"
+        "\n"
+    );
+}
+
 int main() {
     int x;
     int t = time(NULL);
@@ -324,9 +334,11 @@ int main() {
     SDL_AudioSpec fmt;
     SDL_Event event;
 
-    sprintf(name, "%i.wav", t);   wav = fopen(name, "wb");
-    sprintf(name, "%i.txt", t);   txt = fopen(name, "wb");
-    sprintf(name, "%i.asm", t);   as  = fopen(name, "wb");
+    print_help();
+
+    sprintf(name, "%i.wav", t);   wav = fopen(name, "wb");  printf("Recording audio to %s\n", name);
+    sprintf(name, "%i.txt", t);   txt = fopen(name, "wb");  printf("Saving Audacity labels to %s\n", name);
+    sprintf(name, "%i.asm", t);   as  = fopen(name, "wb");  printf("Saving ASM data to %s\n", name);
     write_wav_header();
 
     /* need a window for the keyboard to work */
@@ -353,6 +365,7 @@ int main() {
         while (SDL_PollEvent(&event)) {
             if (event.type == SDL_KEYDOWN || event.type == SDL_KEYUP) {
                 int x;
+                float t = num_samples / (float)FREQ;
 
                 if (event.key.keysym.sym == SDLK_ESCAPE)
                     goto die;
@@ -367,8 +380,8 @@ int main() {
                             myAUDV[keymap[x].freq_inv ^ 31] = 1000;
                             sprint_binary(keymap[x].freq_inv ^ 31, temp);
                             printf("%s\n", temp);
-                            fprintf(txt, "%f %f %s\n", num_samples / (float)FREQ, num_samples / (float)FREQ, temp);
-                            fprintf(as, "\t.byte %s\t;%f\n", temp, num_samples / (float)FREQ);
+                            fprintf(txt, "%f %f %s\n", t, t, temp);
+                            fprintf(as, "\t.byte %s\t;%f\n", temp, t);
                         } else
                             myAUDV[keymap[x].freq_inv ^ 31] = 0;
                     }
