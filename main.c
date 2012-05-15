@@ -26,6 +26,11 @@ static const int typetab[] = {
     1,2,3,4,6,7,8,12,14,15,
 };
 
+/* what the sounds are called in Slocum's player */
+static const int slocumtab[] = {
+    6,-1,7,0,1,2,3,5,-1,4,
+};
+
 //code mostly ripped from Stella
 static uint8_t myAUDC[C] = {0};
 static uint8_t myAUDF[C] = {0};
@@ -35,6 +40,19 @@ static uint8_t myP5[C];           // 5-bit register LFSR (lower 5 bits used)
 
 static FILE *wav, *txt, *as;
 static int64_t num_samples = 0;
+
+static void sprint_binary(int freq, char *out) {
+    int c = myAUDC[freq];
+    int bits = slocumtab[c];
+    char temp[5];
+
+    if (bits < 0)
+        sprintf(temp, "%%xxx");
+    else
+        sprintf(temp, "%%%i%i%i", (bits >> 2) & 1, (bits >> 1) & 1, bits & 1);
+
+    sprintf(out, "%s%i%i%i%i%i", temp, (freq >> 4) & 1, (freq >> 3) & 1, (freq >> 2) & 1, (freq >> 1) & 1, freq & 1);
+}
 
 static int next_tia_sample() {
     int c, ret = 0;
@@ -344,9 +362,14 @@ int main() {
 
                 for (x = 0; x < sizeof(keymap)/sizeof(keymap[0]); x++)
                     if (event.key.keysym.sym == keymap[x].key) {
-                        if (event.type == SDL_KEYDOWN)
+                        if (event.type == SDL_KEYDOWN) {
+                            char temp[32];
                             myAUDV[keymap[x].freq_inv ^ 31] = 1000;
-                        else
+                            sprint_binary(keymap[x].freq_inv ^ 31, temp);
+                            printf("%s\n", temp);
+                            fprintf(txt, "%f %f %s\n", num_samples / (float)FREQ, num_samples / (float)FREQ, temp);
+                            fprintf(as, "\t.byte %s\t;%f\n", temp, num_samples / (float)FREQ);
+                        } else
                             myAUDV[keymap[x].freq_inv ^ 31] = 0;
                     }
             } else if (event.type == SDL_QUIT)
