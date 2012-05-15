@@ -1,5 +1,6 @@
 #include <SDL/SDL.h>
 #include <SDL/SDL_audio.h>
+#include <stdio.h>
 
 #define FREQ 31400
 #define C 32
@@ -31,6 +32,9 @@ static uint8_t myAUDF[C] = {0};
 static int myAUDV[C] = {0};
 static uint8_t myP4[C];           // 4-bit register LFSR (lower 4 bits used)
 static uint8_t myP5[C];           // 5-bit register LFSR (lower 5 bits used)
+
+static FILE *wav, *txt, *as;
+static int64_t num_samples = 0;
 
 static int next_tia_sample() {
     int c, ret = 0;
@@ -253,6 +257,9 @@ static void synth(void *unused, Uint8 *stream, int len) {
 
     for (x = 0; x < len/2; x++)
         s16[x] = next_tia_sample();
+
+    fwrite(stream, len, 1, wav);
+    num_samples += len/2;
 }
 
 static void setAUDC(int c) {
@@ -267,11 +274,42 @@ static void setAUDV(int v) {
         myAUDV[x] = v;
 }
 
+static void write_l32(FILE *f, uint32_t a) {
+    putc(a, f);
+    putc(a>>8, f);
+    putc(a>>16, f);
+    putc(a>>24, f);
+}
+
+static void write_wav_header() {
+    fprintf(wav, "RIFFxxxxWAVEfmt ");
+    write_l32(wav, 16);
+    write_l32(wav, 0x00010001);
+    write_l32(wav, FREQ);
+    write_l32(wav, FREQ*2);
+    write_l32(wav, 0x00100002);
+    fprintf(wav, "dataxxxx");
+}
+
+static void update_wav_header() {
+    fseek(wav, 4, SEEK_SET);
+    write_l32(wav, num_samples*2 + 36);
+    fseek(wav, 40, SEEK_SET);
+    write_l32(wav, num_samples*2);
+}
+
 int main() {
     int x;
+    int t = time(NULL);
+    char name[256];
 
     SDL_AudioSpec fmt;
     SDL_Event event;
+
+    sprintf(name, "%i.wav", t);   wav = fopen(name, "wb");
+    sprintf(name, "%i.txt", t);   txt = fopen(name, "wb");
+    sprintf(name, "%i.asm", t);   as  = fopen(name, "wb");
+    write_wav_header();
 
     /* need a window for the keyboard to work */
     SDL_SetVideoMode(320, 240, 0, 0);
@@ -318,6 +356,7 @@ int main() {
         usleep(10000);
     }
 die:
+    update_wav_header();
 
     return 0;
 }
