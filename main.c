@@ -370,8 +370,19 @@ int main() {
                 if (event.key.keysym.sym == SDLK_ESCAPE)
                     goto die;
 
-                if (event.key.keysym.sym >= SDLK_KP0 && event.key.keysym.sym <= SDLK_KP9)
-                    setAUDC(typetab[event.key.keysym.sym - SDLK_KP0]);
+                if (event.type == SDL_KEYDOWN) {
+                    if (event.key.keysym.sym == SDLK_SPACE) {
+                        printf("Marked space at %f\n", t);
+                        fprintf(txt, "%f %f SPACE\n", t, t);
+                    } else if (event.key.keysym.sym == SDLK_RETURN) {
+                        printf("Marked good at %f\n", t);
+                        fprintf(txt, "%f %f GOOD\n", t, t);
+                    } else if (event.key.keysym.sym >= SDLK_KP0 && event.key.keysym.sym <= SDLK_KP9) {
+                        int type = typetab[event.key.keysym.sym - SDLK_KP0];
+                        printf("Switching to AUDC %i\n", type);
+                        setAUDC(type);
+                    }
+                }
 
                 for (x = 0; x < sizeof(keymap)/sizeof(keymap[0]); x++)
                     if (event.key.keysym.sym == keymap[x].key) {
