@@ -301,6 +301,9 @@ int main() {
                 if (event.key.keysym.sym == SDLK_ESCAPE)
                     goto die;
 
+                if (event.key.keysym.sym >= SDLK_KP0 && event.key.keysym.sym <= SDLK_KP9)
+                    setAUDC(typetab[event.key.keysym.sym - SDLK_KP0]);
+
                 for (x = 0; x < sizeof(keymap)/sizeof(keymap[0]); x++)
                     if (event.key.keysym.sym == keymap[x].key) {
                         if (event.type == SDL_KEYDOWN)
