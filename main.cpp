@@ -1,6 +1,8 @@
 #include <SDL/SDL.h>
 #include <SDL/SDL_audio.h>
 #include <stdio.h>
+#include <time.h>
+#include <unistd.h>
 
 #define FREQ 31400
 #define C 32
@@ -12,14 +14,14 @@ static const struct {
     int freq_inv;   //they're XOR 31 because I messed up and I'm too lazy to change all the numbers
 } keymap[] = {
     /* SDL handily uses ASCII key codes */
-    {'z',0},    {'x',1},    {'c',2},    {'v',3},
-    {'b',4},    {'n',5},    {'m',6},    {',',7},
-    {'a',8},    {'s',9},    {'d',10},   {'f',11},
-    {'g',12},   {'h',13},   {'j',14},   {'k',15},
-    {'q',16},   {'w',17},   {'e',18},   {'r',19},
-    {'t',20},   {'y',21},   {'u',22},   {'i',23},
-    {'1',24},   {'2',25},   {'3',26},   {'4',27},
-    {'5',28},   {'6',29},   {'7',30},   {'8',31},
+    {(SDLKey)'z',0},    {(SDLKey)'x',1},    {(SDLKey)'c',2},    {(SDLKey)'v',3},
+    {(SDLKey)'b',4},    {(SDLKey)'n',5},    {(SDLKey)'m',6},    {(SDLKey)',',7},
+    {(SDLKey)'a',8},    {(SDLKey)'s',9},    {(SDLKey)'d',10},   {(SDLKey)'f',11},
+    {(SDLKey)'g',12},   {(SDLKey)'h',13},   {(SDLKey)'j',14},   {(SDLKey)'k',15},
+    {(SDLKey)'q',16},   {(SDLKey)'w',17},   {(SDLKey)'e',18},   {(SDLKey)'r',19},
+    {(SDLKey)'t',20},   {(SDLKey)'y',21},   {(SDLKey)'u',22},   {(SDLKey)'i',23},
+    {(SDLKey)'1',24},   {(SDLKey)'2',25},   {(SDLKey)'3',26},   {(SDLKey)'4',27},
+    {(SDLKey)'5',28},   {(SDLKey)'6',29},   {(SDLKey)'7',30},   {(SDLKey)'8',31},
 };
 
 static const int typetab[] = {
