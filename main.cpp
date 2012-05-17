@@ -34,7 +34,10 @@ static const int typetab[] = {
 
 /* what the sounds are called in Slocum's player */
 static const int slocumtab[] = {
-    6,-1,7,0,1,2,3,5,-1,4,
+    -1,6,-1,7,
+    0,-1,1,2,
+    3,-1,-1,-1,
+    5,-1,-1,4,
 };
 
 //code mostly ripped from Stella
