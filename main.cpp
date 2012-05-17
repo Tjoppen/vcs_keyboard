@@ -3,6 +3,10 @@
 #include <stdio.h>
 #include <time.h>
 #include <unistd.h>
+#include <vector>
+#include <string>
+
+using namespace std;
 
 #define FREQ 31400
 #define C 32
@@ -40,8 +44,12 @@ static int myAUDV[C] = {0};
 static uint8_t myP4[C];           // 4-bit register LFSR (lower 4 bits used)
 static uint8_t myP5[C];           // 5-bit register LFSR (lower 5 bits used)
 
-static FILE *wav, *txt, *as, *mrk;
-static int64_t num_samples = 0;
+typedef pair<float,string> mark;
+
+static vector<mark> notes;
+static vector<int16_t> samples;
+static int T;                   /* when the program was started */
+static int number = 0;
 
 static void sprint_binary(int freq, char *out) {
     int c = myAUDC[freq];
@@ -273,13 +281,10 @@ static int next_tia_sample() {
 
 static void synth(void *unused, Uint8 *stream, int len) {
     int16_t *s16 = (int16_t*)stream;
-    int x, f;
+    int x;
 
     for (x = 0; x < len/2; x++)
-        s16[x] = next_tia_sample();
-
-    fwrite(stream, len, 1, wav);
-    num_samples += len/2;
+        samples.push_back(s16[x] = next_tia_sample());
 }
 
 static void setAUDC(int c) {
@@ -301,48 +306,75 @@ static void write_l32(FILE *f, uint32_t a) {
     putc(a>>24, f);
 }
 
-static void write_wav_header() {
-    fprintf(wav, "RIFFxxxxWAVEfmt ");
+static void write_wav() {
+    char name[256];
+
+    sprintf(name, "%i-%i.wav", T, number);
+    printf("Writing %li sample WAV to %s\n", samples.size(), name);
+
+    FILE *wav = fopen(name, "wb");
+    fprintf(wav, "RIFF");
+    write_l32(wav, samples.size()*2 + 36);
+    fprintf(wav, "WAVEfmt ");
     write_l32(wav, 16);
     write_l32(wav, 0x00010001);
     write_l32(wav, FREQ);
     write_l32(wav, FREQ*2);
     write_l32(wav, 0x00100002);
-    fprintf(wav, "dataxxxx");
+    fprintf(wav, "data");
+    write_l32(wav, samples.size()*2);
+    fwrite(&samples[0], samples.size()*2, 1, wav);
+    fclose(wav);
 }
 
-static void update_wav_header() {
-    fseek(wav, 4, SEEK_SET);
-    write_l32(wav, num_samples*2 + 36);
-    fseek(wav, 40, SEEK_SET);
-    write_l32(wav, num_samples*2);
+static void write_audacity() {
+    char name[256];
+
+    sprintf(name, "%i-%i.txt", T, number);
+    printf("Writing Audacity notes to %s\n", name);
+
+    FILE *aud = fopen(name, "w");
+
+    for (size_t x = 0; x < notes.size(); x++)
+        fprintf(aud, "%f %f %s\n", notes[x].first, notes[x].first, notes[x].second.c_str());
+
+    fclose(aud);
+}
+
+static void write_asm() {
+    char name[256];
+
+    sprintf(name, "%i-%i.asm", T, number);
+    printf("Writing ASM data to %s\n", name);
+
+    FILE *as = fopen(name, "w");
+
+    for (size_t x = 0; x < notes.size(); x++)
+        fprintf(as, "\t.byte %s\t;%f\n", notes[x].second.c_str(), notes[x].first);
+
+    fclose(as);
 }
 
 static void print_help() {
     printf(
         "Keys 8-Z in a normal QWERTY matrix = AUDF 0..31\n"
         "Keypad 0-9 changes sound type\n"
-        "Press 'enter' to label the end of interesting passages\n"
-        "Press 'space' to delimit passages\n"
+        "Press 'enter' to save what you've played (WAV, Audacity labels and ASM data)\n"
+        "Press 'space' to clear the current recording\n"
+        "The current recording is also saved when the program is terminated (ESC)\n"
         "\n"
     );
 }
 
 int main() {
     int x;
-    int t = time(NULL);
     char name[256];
 
     SDL_AudioSpec fmt;
     SDL_Event event;
 
     print_help();
-
-    sprintf(name, "%i.wav", t);   wav = fopen(name, "wb");  printf("Recording audio to %s\n", name);
-    sprintf(name, "%i.txt", t);   txt = fopen(name, "wb");  printf("Saving Audacity labels to %s\n", name);
-    sprintf(name, "%imrk.txt", t);mrk = fopen(name, "wb");  printf("Saving Audacity marks to %s\n", name);
-    sprintf(name, "%i.asm", t);   as  = fopen(name, "wb");  printf("Saving ASM data to %s\n", name);
-    write_wav_header();
+    T = time(NULL);
 
     /* need a window for the keyboard to work */
     SDL_SetVideoMode(320, 240, 0, 0);
@@ -368,20 +400,24 @@ int main() {
         while (SDL_PollEvent(&event)) {
             if (event.type == SDL_KEYDOWN || event.type == SDL_KEYUP) {
                 int x;
-                float t = num_samples / (float)FREQ;
+                float t = samples.size() / (float)FREQ;
 
                 if (event.key.keysym.sym == SDLK_ESCAPE)
                     goto die;
 
                 if (event.type == SDL_KEYDOWN) {
                     if (event.key.keysym.sym == SDLK_SPACE) {
-                        printf("Marked space at %f\n", t);
-                        fprintf(txt, "%f %f SPACE\n", t, t);
-                        fprintf(mrk, "%f %f SPACE\n", t, t);
+                        /* clear */
+                        printf("Recording cleared\n");
+                        samples.clear();
+                        notes.clear();
                     } else if (event.key.keysym.sym == SDLK_RETURN) {
-                        printf("Marked good at %f\n", t);
-                        fprintf(txt, "%f %f GOOD\n", t, t);
-                        fprintf(mrk, "%f %f GOOD\n", t, t);
+                        write_wav();
+                        write_audacity();
+                        write_asm();
+                        samples.clear();
+                        notes.clear();
+                        number++;
                     } else if (event.key.keysym.sym >= SDLK_KP0 && event.key.keysym.sym <= SDLK_KP9) {
                         int type = typetab[event.key.keysym.sym - SDLK_KP0];
                         printf("Switching to AUDC %i\n", type);
@@ -396,8 +432,7 @@ int main() {
                             myAUDV[keymap[x].freq_inv ^ 31] = 1000;
                             sprint_binary(keymap[x].freq_inv ^ 31, temp);
                             printf("%s\n", temp);
-                            fprintf(txt, "%f %f %s\n", t, t, temp);
-                            fprintf(as, "\t.byte %s\t;%f\n", temp, t);
+                            notes.push_back(make_pair(t, temp));
                         } else
                             myAUDV[keymap[x].freq_inv ^ 31] = 0;
                     }
@@ -408,7 +443,9 @@ int main() {
         usleep(10000);
     }
 die:
-    update_wav_header();
+    write_wav();
+    write_audacity();
+    write_asm();
 
     return 0;
 }
