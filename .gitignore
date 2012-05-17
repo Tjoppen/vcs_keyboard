@@ -1,3 +1,6 @@
 *~
 *.kdev*
 vcs_keyboard
+*.txt
+*.asm
+*.wav
