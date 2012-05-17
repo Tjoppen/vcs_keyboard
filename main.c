@@ -38,7 +38,7 @@ static int myAUDV[C] = {0};
 static uint8_t myP4[C];           // 4-bit register LFSR (lower 4 bits used)
 static uint8_t myP5[C];           // 5-bit register LFSR (lower 5 bits used)
 
-static FILE *wav, *txt, *as;
+static FILE *wav, *txt, *as, *mrk;
 static int64_t num_samples = 0;
 
 static void sprint_binary(int freq, char *out) {
@@ -338,6 +338,7 @@ int main() {
 
     sprintf(name, "%i.wav", t);   wav = fopen(name, "wb");  printf("Recording audio to %s\n", name);
     sprintf(name, "%i.txt", t);   txt = fopen(name, "wb");  printf("Saving Audacity labels to %s\n", name);
+    sprintf(name, "%imrk.txt", t);mrk = fopen(name, "wb");  printf("Saving Audacity marks to %s\n", name);
     sprintf(name, "%i.asm", t);   as  = fopen(name, "wb");  printf("Saving ASM data to %s\n", name);
     write_wav_header();
 
@@ -374,9 +375,11 @@ int main() {
                     if (event.key.keysym.sym == SDLK_SPACE) {
                         printf("Marked space at %f\n", t);
                         fprintf(txt, "%f %f SPACE\n", t, t);
+                        fprintf(mrk, "%f %f SPACE\n", t, t);
                     } else if (event.key.keysym.sym == SDLK_RETURN) {
                         printf("Marked good at %f\n", t);
                         fprintf(txt, "%f %f GOOD\n", t, t);
+                        fprintf(mrk, "%f %f GOOD\n", t, t);
                     } else if (event.key.keysym.sym >= SDLK_KP0 && event.key.keysym.sym <= SDLK_KP9) {
                         int type = typetab[event.key.keysym.sym - SDLK_KP0];
                         printf("Switching to AUDC %i\n", type);
