@@ -432,7 +432,7 @@ int main() {
                     if (event.key.keysym.sym == keymap[x].key) {
                         if (event.type == SDL_KEYDOWN) {
                             char temp[32];
-                            myAUDV[keymap[x].freq_inv ^ 31] = 1000;
+                            myAUDV[keymap[x].freq_inv ^ 31] = 8000;
                             sprint_binary(keymap[x].freq_inv ^ 31, temp);
                             printf("%s\n", temp);
                             notes.push_back(make_pair(t, temp));
