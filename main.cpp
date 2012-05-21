@@ -446,11 +446,5 @@ int main() {
         usleep(10000);
     }
 die:
-    if (notes.size()) {
-    write_wav();
-    write_audacity();
-    write_asm();
-    }
-
     return 0;
 }
