@@ -53,6 +53,8 @@ static vector<mark> notes;
 static vector<int16_t> samples;
 static int T;                   /* when the program was started */
 static int number = 0;
+#define FPS 50
+static int frame = 0;
 
 static void sprint_binary(int freq, char *out) {
     int c = myAUDC[freq];
@@ -400,11 +402,24 @@ int main() {
     SDL_PauseAudio(0);
 
     for(;;) {
+        float t = samples.size() / (float)FREQ;
+        int f = t * FPS;
+
+        if (f != frame) {
+            frame = f;
+
+            for (x = 0; x < C; x++) {
+                if (myAUDV[x] <= 0 || myAUDV[x] >= 8000)
+                    continue;
+
+                if ((myAUDV[x] -= 1000) < 0)
+                    myAUDV[x] = 0;
+            }
+        }
+
         while (SDL_PollEvent(&event)) {
             if (event.type == SDL_KEYDOWN || event.type == SDL_KEYUP) {
                 int x;
-                float t = samples.size() / (float)FREQ;
-
                 if (event.key.keysym.sym == SDLK_ESCAPE)
                     goto die;
 
@@ -437,7 +452,7 @@ int main() {
                             printf("%s\n", temp);
                             notes.push_back(make_pair(t, temp));
                         } else
-                            myAUDV[keymap[x].freq_inv ^ 31] = 0;
+                            myAUDV[keymap[x].freq_inv ^ 31] = 7000;
                     }
             } else if (event.type == SDL_QUIT)
                 goto die;
