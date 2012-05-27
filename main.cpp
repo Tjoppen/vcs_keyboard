@@ -392,7 +392,7 @@ int main() {
     fmt.freq = FREQ;
     fmt.format = AUDIO_S16;
     fmt.channels = 1;
-    fmt.samples = 512;          /* 256 samples, like Stella */
+    fmt.samples = 128;
     fmt.callback = synth;
     fmt.userdata = NULL;
 
