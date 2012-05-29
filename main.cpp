@@ -2,7 +2,12 @@
 #include <SDL/SDL_audio.h>
 #include <stdio.h>
 #include <time.h>
+#ifdef WIN32
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#else
 #include <unistd.h>
+#endif
 #include <vector>
 #include <string>
 
@@ -371,7 +376,7 @@ static void print_help() {
     );
 }
 
-int main() {
+int main(int argc, char **argv) {
     int x;
     char name[256];
 
@@ -392,7 +397,11 @@ int main() {
     fmt.freq = FREQ;
     fmt.format = AUDIO_S16;
     fmt.channels = 1;
+#ifdef WIN32
+    fmt.samples = 512;
+#else
     fmt.samples = 128;
+#endif
     fmt.callback = synth;
     fmt.userdata = NULL;
 
@@ -458,7 +467,11 @@ int main() {
                 goto die;
         }
 
+#ifdef WIN32
+        Sleep(10);
+#else
         usleep(10000);
+#endif
     }
 die:
     return 0;
