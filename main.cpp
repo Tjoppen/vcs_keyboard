@@ -371,7 +371,6 @@ static void print_help() {
         "Keypad 0-9 changes sound type\n"
         "Press 'enter' to save what you've played (WAV, Audacity labels and ASM data)\n"
         "Press 'space' to clear the current recording\n"
-        "The current recording is also saved when the program is terminated (ESC)\n"
         "\n"
     );
 }
