@@ -52,7 +52,11 @@ static int myAUDV[C] = {0};
 static uint8_t myP4[C];           // 4-bit register LFSR (lower 4 bits used)
 static uint8_t myP5[C];           // 5-bit register LFSR (lower 5 bits used)
 
-typedef pair<float,string> mark;
+struct mark {
+    float t;
+    string binary, wav;
+    int type, freq;
+};
 
 static vector<mark> notes;
 static vector<int16_t> samples;
@@ -60,6 +64,14 @@ static int T;                   /* when the program was started */
 static int number = 0;
 #define FPS 50
 static int frame = 0;
+
+static void sprint_wav(int type, int freq, char *out) {
+    sprintf(out, "sound_%02i_%02i.wav", typetab[type], freq);
+}
+
+static void sprint_note(int type, int freq, char *out) {
+    //TODO: we need a lengthy table for this..
+}
 
 static void sprint_binary(int freq, char *out) {
     int c = myAUDC[freq];
@@ -346,7 +358,7 @@ static void write_audacity() {
     FILE *aud = fopen(name, "w");
 
     for (size_t x = 0; x < notes.size(); x++)
-        fprintf(aud, "%f %f %s\n", notes[x].first, notes[x].first, notes[x].second.c_str());
+        fprintf(aud, "%f %f %s\n", notes[x].t, notes[x].t, notes[x].binary.c_str());
 
     fclose(aud);
 }
@@ -360,7 +372,7 @@ static void write_asm() {
     FILE *as = fopen(name, "w");
 
     for (size_t x = 0; x < notes.size(); x++)
-        fprintf(as, "\t.byte %s\t;%f\n", notes[x].second.c_str(), notes[x].first);
+        fprintf(as, "\t.byte %s\t; %s %.2f\n", notes[x].binary.c_str(), notes[x].wav.c_str(), notes[x].t);
 
     fclose(as);
 }
@@ -378,6 +390,7 @@ static void print_help() {
 int main(int argc, char **argv) {
     int x;
     char name[256];
+    int curtype = 3;
 
     SDL_AudioSpec fmt;
     SDL_Event event;
@@ -388,7 +401,7 @@ int main(int argc, char **argv) {
     /* need a window for the keyboard to work */
     SDL_SetVideoMode(320, 240, 0, 0);
 
-    setAUDC(4);
+    setAUDC(typetab[curtype]);
 
     for (x = 0; x < C; x++)
         myAUDF[x] = x;
@@ -445,7 +458,8 @@ int main(int argc, char **argv) {
                         notes.clear();
                         number++;
                     } else if (event.key.keysym.sym >= SDLK_KP0 && event.key.keysym.sym <= SDLK_KP9) {
-                        int type = typetab[event.key.keysym.sym - SDLK_KP0];
+                        curtype = event.key.keysym.sym - SDLK_KP0;;
+                        int type = typetab[curtype];
                         printf("Switching to AUDC %i\n", type);
                         setAUDC(type);
                     }
@@ -455,10 +469,22 @@ int main(int argc, char **argv) {
                     if (event.key.keysym.sym == keymap[x].key) {
                         if (event.type == SDL_KEYDOWN) {
                             char temp[32];
-                            myAUDV[keymap[x].freq_inv ^ 31] = 8000;
-                            sprint_binary(keymap[x].freq_inv ^ 31, temp);
+                            mark m;
+                            m.freq = keymap[x].freq_inv ^ 31;
+                            m.type = curtype;
+                            m.t = t;
+
+                            myAUDV[m.freq] = 8000;
+                            sprint_binary(m.freq, temp);
+
+                            printf("%s ", temp);
+                            m.binary = temp;
+
+                            sprint_wav(m.type, m.freq, temp);
                             printf("%s\n", temp);
-                            notes.push_back(make_pair(t, temp));
+                            m.wav = temp;
+
+                            notes.push_back(m);
                         } else
                             myAUDV[keymap[x].freq_inv ^ 31] = 7000;
                     }
