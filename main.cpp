@@ -45,6 +45,156 @@ static const int slocumtab[] = {
     5,-1,-1,4,
 };
 
+static const char notenames[4][32][8] = {
+    {
+        /* bass (6 & 7) */
+        "B5",   /* 0  */
+        "B4",   /* 1  */
+        "E4",   /* 2  */
+        "B3",   /* 3  */
+        "G3",   /* 4  */
+        "E3",   /* 5  */
+        "",     /* 6  */
+        "B2",   /* 7  */
+        "A2",   /* 8  */
+        "G2",   /* 9  */
+        "F#2",  /* 10 */
+        "E2",   /* 11 */
+        "D#2",  /* 12 */
+        "",     /* 13 */
+        "C2",   /* 14 */
+        "B1",   /* 15 */
+        "",     /* 16 */
+        "A1",   /* 17 */
+        "",     /* 18 */
+        "G1",   /* 19 */
+        "",     /* 20 */
+        "F#1",  /* 21 */
+        "F1",   /* 22 */
+        "E1",   /* 23 */
+        "",     /* 24 */
+        "D#1",  /* 25 */
+        "D1",   /* 26 */
+        "",     /* 27 */
+        "C#1",  /* 28 */
+        "C1",   /* 29 */
+        "C1",   /* 30 */
+        "B0",   /* 31 */
+    },
+    {
+        /* square (4) */
+        "B9",
+        "B8",
+        "E8",
+        "B7",
+        "G7",
+        "E7",
+        "",
+        "B6",
+        "A6",
+        "G6",
+        "F6",
+        "E6",
+        "D6",
+        "",
+        "C6",
+        "B5",
+        "A#5",
+        "A5",
+        "G#5",
+        "G5",
+        "F#5",
+        "F5",
+        "E5",
+        "E5",
+        "",
+        "D5",
+        "D5",
+        "",
+        "C5",
+        "C5",
+        "B4",
+        "B4",
+    },
+    {
+        /* lead (12) */
+        "E8",
+        "E7",
+        "A6",
+        "E6",
+        "C6",
+        "A5",
+        "",
+        "E5",
+        "D5",
+        "C5",
+        "A#4",
+        "A4",
+        "G4",
+        "F#4",
+        "F4",
+        "E4",
+        "",
+        "D4",
+        "C#4",
+        "C4",
+        "",
+        "A#3",
+        "A3",
+        "A3",
+        "G#3",
+        "G3",
+        "G3",
+        "F#3",
+        "F3",
+        "F3",
+        "E3",
+        "E3",
+    },
+    {
+        /* saw (1) */
+        "C7",
+        "C6",
+        "F5",
+        "C5",
+        "G#4",
+        "F4",
+        "",
+        "C4",
+        "A#3",
+        "G#3",
+        "F#3",
+        "F3",
+        "D#3",
+        "",
+        "C#3",
+        "C3",
+        "B2",
+        "A#2",
+        "A2",
+        "G#2",
+        "",
+        "F#2",
+        "",
+        "F2",
+        "",
+        "D#2",
+        "D#2",
+        "D2",
+        "",
+        "C#2",
+        "C2",
+        "C2",
+    },
+};
+
+static const int audcnotesnamemap[16] = {
+    -1,3,-1,-1,
+    1,-1,0,0,
+    -1,-1,-1,-1,
+    2,-1,-1,-1,
+};
+
 //code mostly ripped from Stella
 static uint8_t myAUDC[C] = {0};
 static uint8_t myAUDF[C] = {0};
@@ -54,7 +204,7 @@ static uint8_t myP5[C];           // 5-bit register LFSR (lower 5 bits used)
 
 struct mark {
     float t;
-    string binary, wav;
+    string binary, wav, note;
     int type, freq;
 };
 
@@ -71,6 +221,10 @@ static void sprint_wav(int type, int freq, char *out) {
 
 static void sprint_note(int type, int freq, char *out) {
     //TODO: we need a lengthy table for this..
+    int t = audcnotesnamemap[typetab[type]];
+
+    if (t < 0) strcpy(out, "");
+    else       strcpy(out, notenames[t][freq]);
 }
 
 static void sprint_binary(int freq, char *out) {
@@ -372,7 +526,7 @@ static void write_asm() {
     FILE *as = fopen(name, "w");
 
     for (size_t x = 0; x < notes.size(); x++)
-        fprintf(as, "\t.byte %s\t; %s %.2f\n", notes[x].binary.c_str(), notes[x].wav.c_str(), notes[x].t);
+        fprintf(as, "\t.byte %s\t; %s %s %.2f\n", notes[x].binary.c_str(), notes[x].wav.c_str(), notes[x].note.c_str(), notes[x].t);
 
     fclose(as);
 }
@@ -481,8 +635,12 @@ int main(int argc, char **argv) {
                             m.binary = temp;
 
                             sprint_wav(m.type, m.freq, temp);
-                            printf("%s\n", temp);
+                            printf("%s ", temp);
                             m.wav = temp;
+
+                            sprint_note(m.type, m.freq, temp);
+                            printf("%s\n", temp);
+                            m.note = temp;
 
                             notes.push_back(m);
                         } else
