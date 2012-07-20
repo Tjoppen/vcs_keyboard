@@ -10,6 +10,8 @@
 #endif
 #include <vector>
 #include <string>
+#include <set>
+#include <sstream>
 
 using namespace std;
 
@@ -26,6 +28,7 @@ static uint8_t myAUDF[C] = {0};
 static int myAUDV[C] = {0};
 static uint8_t myP4[C];           // 4-bit register LFSR (lower 4 bits used)
 static uint8_t myP5[C];           // 5-bit register LFSR (lower 5 bits used)
+static set<int> audcSet;          //AUDC values present in the current recording
 
 #include "tiasnd.c"
 
@@ -94,10 +97,10 @@ static void write_l32(FILE *f, uint32_t a) {
     putc(a>>24, f);
 }
 
-static void write_wav() {
+static void write_wav(string base) {
     char name[256];
 
-    sprintf(name, "%i-%i.wav", T, number);
+    sprintf(name, "%s%i-%i.wav", base.c_str(), T, number);
     printf("Writing %li sample WAV to %s\n", samples.size(), name);
 
     FILE *wav = fopen(name, "wb");
@@ -115,10 +118,10 @@ static void write_wav() {
     fclose(wav);
 }
 
-static void write_audacity() {
+static void write_audacity(string base) {
     char name[256];
 
-    sprintf(name, "%i-%i.txt", T, number);
+    sprintf(name, "%s%i-%i.txt", base.c_str(), T, number);
     printf("Writing Audacity notes to %s\n", name);
 
     FILE *aud = fopen(name, "w");
@@ -129,10 +132,10 @@ static void write_audacity() {
     fclose(aud);
 }
 
-static void write_asm() {
+static void write_asm(string base) {
     char name[256];
 
-    sprintf(name, "%i-%i.asm", T, number);
+    sprintf(name, "%s%i-%i.asm", base.c_str(), T, number);
     printf("Writing ASM data to %s\n", name);
 
     FILE *as = fopen(name, "w");
@@ -216,10 +219,18 @@ int main(int argc, char **argv) {
                         printf("Recording cleared\n");
                         samples.clear();
                         notes.clear();
+                        audcSet.clear();
                     } else if (event.key.keysym.sym == SDLK_RETURN) {
-                        write_wav();
-                        write_audacity();
-                        write_asm();
+                        if (audcSet.size()) {
+                            ostringstream oss;
+                            for (set<int>::iterator it = audcSet.begin(); it != audcSet.end(); it++)
+                                oss << *it << "-";
+
+                            write_wav(oss.str());
+                            write_audacity(oss.str());
+                            write_asm(oss.str());
+                        }
+
                         samples.clear();
                         notes.clear();
                         number++;
@@ -239,6 +250,7 @@ int main(int argc, char **argv) {
                             m.freq = keymap[x].freq_inv ^ 31;
                             m.type = curtype;
                             m.t = t;
+                            audcSet.insert(typetab[curtype]);
 
                             myAUDV[m.freq] = 8000;
                             sprint_binary(m.freq, temp);
