@@ -34,7 +34,7 @@ static set<int> audcSet;          //AUDC values present in the current recording
 
 struct mark {
     float t;
-    string binary, wav, note;
+    string binary, note;
     int type, freq;
 };
 
@@ -44,10 +44,6 @@ static int T;                   /* when the program was started */
 static int number = 0;
 #define FPS 50
 static int frame = 0;
-
-static void sprint_wav(int type, int freq, char *out) {
-    sprintf(out, "sound_%02i_%02i.wav", typetab[type], freq);
-}
 
 static void sprint_note(int type, int freq, char *out) {
     //TODO: we need a lengthy table for this..
@@ -141,7 +137,7 @@ static void write_asm(string base) {
     FILE *as = fopen(name, "w");
 
     for (size_t x = 0; x < notes.size(); x++)
-        fprintf(as, "\t.byte %s\t; %s %s %.2f\n", notes[x].binary.c_str(), notes[x].wav.c_str(), notes[x].note.c_str(), notes[x].t);
+        fprintf(as, "\t.byte %s\t; %s %.2f\n", notes[x].binary.c_str(), notes[x].note.c_str(), notes[x].t);
 
     fclose(as);
 }
@@ -257,10 +253,6 @@ int main(int argc, char **argv) {
 
                             printf("%s ", temp);
                             m.binary = temp;
-
-                            sprint_wav(m.type, m.freq, temp);
-                            printf("%s ", temp);
-                            m.wav = temp;
 
                             sprint_note(m.type, m.freq, temp);
                             printf("%s\n", temp);
