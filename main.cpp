@@ -145,11 +145,22 @@ static void write_asm(string base) {
 static void print_help() {
     printf(
         "Keys 8-Z in a normal QWERTY matrix = AUDF 0..31\n"
-        "Keypad 0-9 changes sound type\n"
+        "Keypad 0-9 and page up/down changes sound type\n"
         "Press 'enter' to save what you've played (WAV, Audacity labels and ASM data)\n"
         "Press 'space' to clear the current recording\n"
         "\n"
     );
+}
+
+void setCurtype(int value, int *curtype) {
+    //wrap around
+    if (value < 0) value = 9;
+    if (value > 9) value = 0;
+
+    *curtype = value;
+    int type = typetab[*curtype];
+    printf("Switching to AUDC %i\n", type);
+    setAUDC(type);
 }
 
 int main(int argc, char **argv) {
@@ -231,11 +242,11 @@ int main(int argc, char **argv) {
                         notes.clear();
                         number++;
                     } else if (event.key.keysym.sym >= SDLK_KP0 && event.key.keysym.sym <= SDLK_KP9) {
-                        curtype = event.key.keysym.sym - SDLK_KP0;;
-                        int type = typetab[curtype];
-                        printf("Switching to AUDC %i\n", type);
-                        setAUDC(type);
-                    }
+                        setCurtype(event.key.keysym.sym - SDLK_KP0, &curtype);
+                    } else if (event.key.keysym.sym == SDLK_PAGEUP)
+                       setCurtype(curtype+1, &curtype);
+                    else if (event.key.keysym.sym == SDLK_PAGEDOWN)
+                        setCurtype(curtype-1, &curtype);
                 }
 
                 for (x = 0; x < sizeof(keymap)/sizeof(keymap[0]); x++)
