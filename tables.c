@@ -1,16 +1,16 @@
 static const struct {
     SDLKey key;
-    int freq_inv;   //they're XOR 31 because I messed up and I'm too lazy to change all the numbers
+    int freq;
 } keymap[] = {
     /* SDL handily uses ASCII key codes */
-    {(SDLKey)'z',0},    {(SDLKey)'x',1},    {(SDLKey)'c',2},    {(SDLKey)'v',3},
-    {(SDLKey)'b',4},    {(SDLKey)'n',5},    {(SDLKey)'m',6},    {(SDLKey)',',7},
-    {(SDLKey)'a',8},    {(SDLKey)'s',9},    {(SDLKey)'d',10},   {(SDLKey)'f',11},
-    {(SDLKey)'g',12},   {(SDLKey)'h',13},   {(SDLKey)'j',14},   {(SDLKey)'k',15},
-    {(SDLKey)'q',16},   {(SDLKey)'w',17},   {(SDLKey)'e',18},   {(SDLKey)'r',19},
-    {(SDLKey)'t',20},   {(SDLKey)'y',21},   {(SDLKey)'u',22},   {(SDLKey)'i',23},
-    {(SDLKey)'1',24},   {(SDLKey)'2',25},   {(SDLKey)'3',26},   {(SDLKey)'4',27},
-    {(SDLKey)'5',28},   {(SDLKey)'6',29},   {(SDLKey)'7',30},   {(SDLKey)'8',31},
+    {(SDLKey)'z',31}, {(SDLKey)'x',30}, {(SDLKey)'c',29}, {(SDLKey)'v',28},
+    {(SDLKey)'b',27}, {(SDLKey)'n',26}, {(SDLKey)'m',25}, {(SDLKey)',',24},
+    {(SDLKey)'a',23}, {(SDLKey)'s',22}, {(SDLKey)'d',21}, {(SDLKey)'f',20},
+    {(SDLKey)'g',19}, {(SDLKey)'h',18}, {(SDLKey)'j',17}, {(SDLKey)'k',16},
+    {(SDLKey)'q',15}, {(SDLKey)'w',14}, {(SDLKey)'e',13}, {(SDLKey)'r',12},
+    {(SDLKey)'t',11}, {(SDLKey)'y',10}, {(SDLKey)'u',9},  {(SDLKey)'i',8},
+    {(SDLKey)'1',7},  {(SDLKey)'2',6},  {(SDLKey)'3',5},  {(SDLKey)'4',4},
+    {(SDLKey)'5',3},  {(SDLKey)'6',2},  {(SDLKey)'7',1},  {(SDLKey)'8',0},
 };
 
 static const int typetab[] = {

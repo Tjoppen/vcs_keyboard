@@ -254,7 +254,7 @@ int main(int argc, char **argv) {
                         if (event.type == SDL_KEYDOWN) {
                             char temp[32];
                             mark m;
-                            m.freq = keymap[x].freq_inv ^ 31;
+                            m.freq = keymap[x].freq;
                             m.type = curtype;
                             m.t = t;
                             audcSet.insert(typetab[curtype]);
@@ -271,7 +271,7 @@ int main(int argc, char **argv) {
 
                             notes.push_back(m);
                         } else
-                            myAUDV[keymap[x].freq_inv ^ 31] = 7000;
+                            myAUDV[keymap[x].freq] = 7000;
                     }
             } else if (event.type == SDL_QUIT)
                 goto die;
