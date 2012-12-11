@@ -1,7 +1,9 @@
-static const struct {
+typedef struct {
     SDLKey key;
     int freq;
-} keymap[] = {
+} KeyMap;
+
+static const KeyMap keymap1[] = {
     /* SDL handily uses ASCII key codes */
     {(SDLKey)'z',31}, {(SDLKey)'x',30}, {(SDLKey)'c',29}, {(SDLKey)'v',28},
     {(SDLKey)'b',27}, {(SDLKey)'n',26}, {(SDLKey)'m',25}, {(SDLKey)',',24},
@@ -11,7 +13,23 @@ static const struct {
     {(SDLKey)'t',11}, {(SDLKey)'y',10}, {(SDLKey)'u',9},  {(SDLKey)'i',8},
     {(SDLKey)'1',7},  {(SDLKey)'2',6},  {(SDLKey)'3',5},  {(SDLKey)'4',4},
     {(SDLKey)'5',3},  {(SDLKey)'6',2},  {(SDLKey)'7',1},  {(SDLKey)'8',0},
+}, keymap2[] = {
+    {(SDLKey)'z',31}, {(SDLKey)'x',27}, {(SDLKey)'c',23}, {(SDLKey)'v',19},
+    {(SDLKey)'a',15}, {(SDLKey)'s',13}, {(SDLKey)'d',11}, {(SDLKey)'f',9},
+    {(SDLKey)'q',7},  {(SDLKey)'w',6},  {(SDLKey)'e',5},  {(SDLKey)'r',4},
+    {(SDLKey)'1',3},  {(SDLKey)'2',2},  {(SDLKey)'3',1},  {(SDLKey)'4',0},
 };
+
+static const struct {
+    const KeyMap *map;
+    size_t size;
+    const char *desc;
+} keymaps[] = {
+    {keymap1, sizeof(keymap1)/sizeof(KeyMap), "Keys 8-Z in a normal QWERTY matrix = AUDF 0..31"},
+    {keymap2, sizeof(keymap2)/sizeof(KeyMap), "Each row (Z-V, A-F, Q-R) is one octave of tones with ratios 1:1, 8:7, 4:3 and 8:5. Top row (1-4) is AUDF 3..0"},
+};
+
+static const size_t num_keymaps = sizeof(keymaps)/sizeof(*keymaps);
 
 static const int typetab[] = {
     1,2,3,4,6,7,8,12,14,15,

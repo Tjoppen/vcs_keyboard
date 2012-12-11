@@ -142,9 +142,15 @@ static void write_asm(string base) {
     fclose(as);
 }
 
+static int curkeymap = 0;
+
+static void print_keymap() {
+    printf("%s\n", keymaps[curkeymap].desc);
+}
+
 static void print_help() {
+    print_keymap();
     printf(
-        "Keys 8-Z in a normal QWERTY matrix = AUDF 0..31\n"
         "Keypad 0-9 and page up/down changes sound type\n"
         "Press 'enter' to save what you've played (WAV, Audacity labels and ASM data)\n"
         "Press 'space' to clear the current recording\n"
@@ -247,14 +253,21 @@ int main(int argc, char **argv) {
                        setCurtype(curtype+1, &curtype);
                     else if (event.key.keysym.sym == SDLK_PAGEDOWN)
                         setCurtype(curtype-1, &curtype);
+                    else if (event.key.keysym.sym == SDLK_HOME) {
+                        curkeymap = (curkeymap + num_keymaps - 1) % num_keymaps;
+                        print_keymap();
+                    } else if (event.key.keysym.sym == SDLK_END) {
+                        curkeymap = (curkeymap + 1) % num_keymaps;
+                        print_keymap();
+                    }
                 }
 
-                for (x = 0; x < sizeof(keymap)/sizeof(keymap[0]); x++)
-                    if (event.key.keysym.sym == keymap[x].key) {
+                for (x = 0; x < keymaps[curkeymap].size; x++)
+                    if (event.key.keysym.sym == keymaps[curkeymap].map[x].key) {
                         if (event.type == SDL_KEYDOWN) {
                             char temp[32];
                             mark m;
-                            m.freq = keymap[x].freq;
+                            m.freq = keymaps[curkeymap].map[x].freq;
                             m.type = curtype;
                             m.t = t;
                             audcSet.insert(typetab[curtype]);
@@ -271,7 +284,7 @@ int main(int argc, char **argv) {
 
                             notes.push_back(m);
                         } else
-                            myAUDV[keymap[x].freq] = 7000;
+                            myAUDV[keymaps[curkeymap].map[x].freq] = 7000;
                     }
             } else if (event.type == SDL_QUIT)
                 goto die;
