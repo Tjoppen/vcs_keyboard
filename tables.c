@@ -23,6 +23,10 @@ static const KeyMap keymap1[] = {
     {(SDLKey)'a',15}, {(SDLKey)'s',14}, {(SDLKey)'d',11}, {(SDLKey)'f',9},  {(SDLKey)'g',8},
     {(SDLKey)'q',7},  {(SDLKey)'w',6},  {(SDLKey)'e',5},  {(SDLKey)'r',4},  {(SDLKey)'t',3},
     {(SDLKey)'1',2},  {(SDLKey)'2',1},  {(SDLKey)'3',0},
+}, keymap4[] = {
+    {(SDLKey)'z',23}, {(SDLKey)'x',21}, {(SDLKey)'c',19}, {(SDLKey)'v',17}, {(SDLKey)'b',15}, {(SDLKey)'n',13},
+    {(SDLKey)'a',11}, {(SDLKey)'s',10}, {(SDLKey)'d',9},  {(SDLKey)'f',8},  {(SDLKey)'g',7},  {(SDLKey)'h',6},
+    {(SDLKey)'q',5},  {(SDLKey)'w',4},  {(SDLKey)'e',3},  {(SDLKey)'r',2},  {(SDLKey)'t',1},  {(SDLKey)'y',0},
 };
 
 static const struct {
@@ -33,6 +37,7 @@ static const struct {
     {keymap1, sizeof(keymap1)/sizeof(KeyMap), "Keys 8-Z in a normal QWERTY matrix = AUDF 0..31"},
     {keymap2, sizeof(keymap2)/sizeof(KeyMap), "Each row (Z-V, A-F, Q-R) is one octave of tones with ratios 1:1, 8:7, 4:3 and 8:5. Top row (1-4) is AUDF 3..0"},
     {keymap3, sizeof(keymap3)/sizeof(KeyMap), "Each row (Z-B, A-G, Q-T) is one octave of tones with ratios 1:1, 16:15, 4:3, 8:5 and 16:9. W and T are detuned. Top row (1-3) is AUDF 2..0"},
+    {keymap4, sizeof(keymap4)/sizeof(KeyMap), "Each row (Z-N, A-H) is one octave of tones with ratios 1:1, 12:11, 6:5, 4:3, 3:2 and 12:7. Q-Y are AUDF 5..0"},
 };
 
 static const size_t num_keymaps = sizeof(keymaps)/sizeof(*keymaps);
